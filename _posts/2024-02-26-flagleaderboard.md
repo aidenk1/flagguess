@@ -1,86 +1,102 @@
 ---
 layout: default
 title: flag guessing
-permalink: /flagleaderboard
+permalink: /leaderboard
 ---
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Leaderboard</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f8ff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
             margin: 0;
-            padding: 0;
-            text-align: center;
-            background-color: #f2f2f2;
-            color: #fff; /* All text is white */
         }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: rgba(0, 0, 0, 0.8);
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            margin-top: 50px;
-        }
-
-        h1 {
-            color: #fff; /* Heading text is white */
-            margin-bottom: 20px;
-        }
-
         table {
-            width: 100%;
+            width: 80%;
             border-collapse: collapse;
+            margin-top: 20px;
         }
-
-        th, td {
-            padding: 10px;
-            border-bottom: 1px solid #ddd;
+        table,
+        th,
+        td {
+            border: 1px solid #ddd;
+            text-align: left;
+            padding: 8px;
         }
-
         th {
-            background-color: #333;
-            color: #fff;
-        }
-
-        tr:nth-child(even) {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-
-        tr:hover {
-            background-color: rgba(255, 255, 255, 0.2);
+            background-color: #007bff;
+            color: white;
         }
     </style>
 </head>
+
 <body>
-    <div class="container">
-        <h1>Leaderboard</h1>
-        <table>
-            <thead>
-                <tr>
-                    <th>Rank</th>
-                    <th>User</th>
-                    <th>Score</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>1</td>
-                    <td>chris</td>
-                    <td>7</td>
-                </tr>
-                <tr>
-                    <td>2</td>
-                    <td>aiden</td>
-                    <td>2</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+    <h1>Leaderboard</h1>
+    <table id="leaderboardTable">
+        <thead>
+            <tr>
+                <th>User ID</th>
+                <th>Score</th>
+            </tr>
+        </thead>
+        <tbody id="leaderboardBody">
+            <!-- Scores will be dynamically populated here -->
+        </tbody>
+    </table>
+    <script>
+        async function fetchLeaderboard() {
+            const apiUrl = "http://127.0.0.1:8086/api/score"; // API endpoint to retrieve scores
+            try {
+                const response = await fetch(apiUrl);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch leaderboard data');
+                }
+                const data = await response.json();
+                displayLeaderboard(data);
+            } catch (error) {
+                console.error('Error fetching leaderboard data:', error);
+            }
+        }
+        function displayLeaderboard(scores) {
+            // Sort scores by score in descending order
+            scores.sort((a, b) => b.score - a.score);
+            // Create a map to store the top score for each user
+            const topScoresMap = new Map();
+            // Iterate through each score and update the top score for each user
+            scores.forEach(score => {
+                const userId = score.name;
+                const userScore = score.score;
+                // Check if the user's score is already in the map
+                if (!topScoresMap.has(userId)) {
+                    // If not, add it to the map
+                    topScoresMap.set(userId, userScore);
+                }
+            });
+            // Convert the map back to an array of objects
+            const topScores = Array.from(topScoresMap, ([name, score]) => ({ name, score }));
+            // Display the sorted and filtered leaderboard
+            const leaderboardBody = document.getElementById('leaderboardBody');
+            leaderboardBody.innerHTML = ''; // Clear previous entries
+            topScores.forEach(score => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${score.name}</td>
+                    <td>${score.score}</td>
+                `;
+                leaderboardBody.appendChild(row);
+            });
+        }
+        // Fetch leaderboard data when the page loads
+        fetchLeaderboard();
+    </script>
 </body>
+
 </html>
